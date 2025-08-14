@@ -1,8 +1,10 @@
 pub type Result<T> = core::result::Result<T, Error>;
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Eq)]
 pub enum Error {
-    CommandNotRecognized(),
+    InvalidPath,
+    CommandNotRecognized(&'static str),
     NotFound(&'static str),
-    InvalidName(&'static str)
+    InvalidName(&'static str),
+    IoError(&'static str)
 }

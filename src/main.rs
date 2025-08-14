@@ -17,11 +17,11 @@ fn main() {
 
         let mut input = String::new();
         stdin().read_line(&mut input).expect("echec...");
-
         let input = input.trim();
 
-        if input == "help" {
-            println!("Liste des commandes disponible:")
+        match parse_command(&input) {
+            Ok(()) => {},
+            Err(e) => println!("{:?}", e)
         }
 
         if input == "exit" {
@@ -31,8 +31,27 @@ fn main() {
     }
 }
 
+fn parse_command(input: &str) -> Result<()> {
+    let args:Vec<&str> = input.split_whitespace().collect();
+    // println!("{:?} -> {}", args, args[0]);
+    let cmd = match args.get(0)  {
+        Some(arg) => arg,
+        None => return Err(Error::CommandNotRecognized("Command not recognized..."))
+    };
+    if cmd.to_string() == "mk".to_string() {
+        println!("Création");
+    }
+
+    if args[0] == "help" {
+        println!("Liste des commandes disponible:");
+        println!("mk    => Créer un dossier.");
+        println!("exit  => Ferme l'application");
+    }
+    Err(Error::CommandNotRecognized("Command not recognized..."))
+}
+
 pub trait Node {
-    fn open(&self) -> Result<Rc<RefCell<Folder>>>;
+    fn open(&self, name:&str) -> Result<Rc<RefCell<Folder>>>;
 
     fn get_path(&self) -> Result<String>;
 }
