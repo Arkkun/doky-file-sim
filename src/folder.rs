@@ -16,7 +16,7 @@ impl Folder {
         Rc::new(RefCell::new(Folder { name, parent:None, childs: Vec::new() }))
     }
 
-    fn add(parent: &Rc<RefCell<Folder>>, name:String) -> Result<Rc<RefCell<Folder>>> {
+    pub fn add(parent: &Rc<RefCell<Folder>>, name:String) -> Result<Rc<RefCell<Folder>>> {
         if !is_valid_name(&name) {
             return Err(Error::InvalidName("Invalid folder name"));
         }
@@ -29,6 +29,7 @@ impl Folder {
 
 impl Node for Folder {
     fn open(&self, name:&str) -> Result<Rc<RefCell<Folder>>> {
+        
         for child in &self.childs {
             if child.borrow().name == name {
                 return Ok(Rc::clone(&child));
@@ -50,6 +51,14 @@ impl Node for Folder {
         }
         Ok(path.to_string())
     }
+    
+    fn move_to(&self, path:&str) -> Result<()> {
+        todo!()
+    }
+    
+    fn remove(&self, name:&str) -> Result<()> {
+        todo!()
+    }
 }
 
 fn is_valid_name(name:&String) -> bool {
@@ -58,6 +67,8 @@ fn is_valid_name(name:&String) -> bool {
 
 #[cfg(test)]
 mod tests {
+    use std::result;
+
     use super::*;
 
     #[test]
@@ -68,6 +79,17 @@ mod tests {
         let result = root.borrow().open(sub_name);
         assert!(result.is_ok());
         assert_eq!(sub_name.to_string(), result.unwrap().borrow().name);
+    }
+
+    #[test]
+    fn open_parent_folder_success() {
+        let root = Folder::new("C:".to_string());
+        let sub_name = "Sub";
+        let sub_folder = Folder::add(&root, sub_name.to_string());
+        let result = sub_folder.unwrap().borrow().open("..");
+        assert!(result.is_ok());
+        assert_eq!("C:", result.unwrap().borrow().name);
+
     }
 
         #[test]
