@@ -82,7 +82,7 @@ impl FromStr for Command {
 pub trait Node {
     fn open(&mut self, name: String) -> Result<&Folder>;
 
-    fn move_to(&self, path: &str) -> Result<()>;
+    fn move_to(&self, path: String) -> Result<()>;
 
-    fn remove(&self, name: &str) -> Result<()>;
+    fn remove(&self, name: String) -> Result<()>;
 }

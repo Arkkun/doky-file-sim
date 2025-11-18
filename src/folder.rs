@@ -90,8 +90,21 @@ impl FolderCursor {
                 return Err(Error::InvalidPath);
             }
         }
-
         Ok(cursor)
+    }
+
+    fn remove(current: &Rc<RefCell<FolderCursor>>, name: String) -> Result<()> {
+        let mut folder = current.borrow_mut();
+        if let Some(index) = folder.childs.iter().position(|f| f.borrow().name == name) {
+            if !folder.childs[index].borrow().childs.is_empty() {
+                let message = format!("Folder {} is not empty", name);
+                return Err(Error::FolderNotEmpty(message));
+            }
+            folder.childs.remove(index);
+            Ok(())
+        } else {
+            Err(Error::InvalidName("Folder not found"))
+        }
     }
 }
 
@@ -133,21 +146,28 @@ impl Node for Folder {
         }
     }
 
-    fn move_to(&self, path: &str) -> Result<()> {
+    fn move_to(&self, path: String) -> Result<()> {
         todo!()
     }
 
-    fn remove(&self, name: &str) -> Result<()> {
-        todo!()
+    fn remove(&self, name: String) -> Result<()> {
+        FolderCursor::remove(&self.item, name)
     }
 }
 
-fn is_valid_name(name: &String) -> bool {
+fn is_valid_name(name: &str) -> bool {
+    if name.contains('/') || name.contains('\\') {
+        return false;
+    }
     true
 }
 
 #[cfg(test)]
 mod tests {
+    use std::result;
+
+    use crate::folder;
+
     use super::*;
 
     fn setup() -> Folder {
@@ -251,5 +271,51 @@ mod tests {
         let cursor = FolderCursor::add(&root, "sub".to_string()).unwrap();
         let result = cursor.borrow().get_path();
         assert_eq!("C:\\sub".to_string(), result.unwrap());
+    }
+
+    #[test]
+    fn is_valid_name_success() {
+        let name = "ValidName".to_string();
+        assert!(is_valid_name(&name));
+    }
+
+    #[test]
+    fn name_contains_slash_is_invalid() {
+        let name = "Invalid/Name".to_string();
+        assert!(!is_valid_name(&name));
+    }
+
+    #[test]
+    fn name_contains_back_slash_is_invalid() {
+        let name = "Invalid\\Name".to_string();
+        assert!(!is_valid_name(&name));
+    }
+
+    #[test]
+    fn remove_folder_success() {
+        let mut folder = setup();
+        let result = folder.remove("second".to_string());
+        assert!(result.is_ok());
+        let result = folder.open("second".to_string());
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn remove_folder_that_not_exist() {
+        let folder = setup();
+        let result = folder.remove("unknown".to_string());
+        assert!(result.is_err());
+        assert_eq!(Error::InvalidName("Folder not found"), result.unwrap_err());
+    }
+
+    #[test]
+    fn remove_folder_not_empty() {
+        let folder = setup();
+        let result = folder.remove("first".to_string());
+        assert!(result.is_err());
+        assert_eq!(
+            Error::FolderNotEmpty("Folder first is not empty".to_string()),
+            result.unwrap_err()
+        );
     }
 }

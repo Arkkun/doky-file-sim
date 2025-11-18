@@ -7,5 +7,6 @@ pub enum Error {
     CommandNotRecognized(&'static str),
     NotFound(&'static str),
     InvalidName(&'static str),
-    IoError(&'static str)
+    FolderNotEmpty(String),
+    ArgsNotRecognized(String),
 }
