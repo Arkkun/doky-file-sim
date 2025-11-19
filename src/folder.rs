@@ -2,6 +2,7 @@ use std::cell::{Ref, RefCell};
 use std::rc::{Rc, Weak};
 
 use crate::Node;
+use crate::command::Argument;
 use crate::error::{Error, Result};
 
 #[derive(Debug)]
@@ -93,7 +94,11 @@ impl FolderCursor {
         Ok(cursor)
     }
 
-    fn remove(current: &Rc<RefCell<FolderCursor>>, name: String) -> Result<()> {
+    fn remove(
+        current: &Rc<RefCell<FolderCursor>>,
+        name: String,
+        argments: Vec<Argument>,
+    ) -> Result<()> {
         let mut folder = current.borrow_mut();
         if let Some(index) = folder.childs.iter().position(|f| f.borrow().name == name) {
             if !folder.childs[index].borrow().childs.is_empty() {
@@ -150,8 +155,8 @@ impl Node for Folder {
         todo!()
     }
 
-    fn remove(&self, name: String) -> Result<()> {
-        FolderCursor::remove(&self.item, name)
+    fn remove(&self, name: String, argments: Vec<Argument>) -> Result<()> {
+        FolderCursor::remove(&self.item, name, argments)
     }
 }
 
@@ -294,7 +299,7 @@ mod tests {
     #[test]
     fn remove_folder_success() {
         let mut folder = setup();
-        let result = folder.remove("second".to_string());
+        let result = folder.remove("second".to_string(), Vec::new());
         assert!(result.is_ok());
         let result = folder.open("second".to_string());
         assert!(result.is_err());
@@ -303,7 +308,7 @@ mod tests {
     #[test]
     fn remove_folder_that_not_exist() {
         let folder = setup();
-        let result = folder.remove("unknown".to_string());
+        let result = folder.remove("unknown".to_string(), Vec::new());
         assert!(result.is_err());
         assert_eq!(Error::InvalidName("Folder not found"), result.unwrap_err());
     }
@@ -311,7 +316,7 @@ mod tests {
     #[test]
     fn remove_folder_not_empty() {
         let folder = setup();
-        let result = folder.remove("first".to_string());
+        let result = folder.remove("first".to_string(), Vec::new());
         assert!(result.is_err());
         assert_eq!(
             Error::FolderNotEmpty("Folder first is not empty".to_string()),

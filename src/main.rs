@@ -1,10 +1,13 @@
+use std::env::Args;
 use std::io::stdin;
 use std::str::FromStr;
 
+mod command;
 mod error;
 mod folder;
 
-use crate::error::{Error, Result};
+use crate::command::{Argument, Command};
+use crate::error::Result;
 use crate::folder::Folder;
 
 fn main() {
@@ -32,6 +35,9 @@ fn main() {
                             println!("Error during open: {:?}", e);
                         }
                     }
+                    Command::Remove(name, arguments) => {
+                        &folder.remove(name, arguments);
+                    }
                     Command::Help => {
                         println!("Command's list:");
                         println!("help: list the commands");
@@ -51,38 +57,10 @@ fn main() {
     }
 }
 
-enum Command {
-    Help,
-    Display,
-    Open(String),
-    Make(String),
-    Move,
-    Remove,
-    Exit,
-}
-
-impl FromStr for Command {
-    type Err = Error;
-
-    fn from_str(s: &str) -> std::result::Result<Self, Self::Err> {
-        let args: Vec<&str> = s.split_whitespace().collect();
-        match args.as_slice() {
-            ["help"] => Ok(Command::Help),
-            ["ls"] => Ok(Command::Display),
-            ["cd", path] => Ok(Command::Open(path.to_string())),
-            ["mk", name] => Ok(Command::Make(name.to_string())),
-            ["mv"] => Ok(Command::Move),
-            ["rm"] => Ok(Command::Remove),
-            ["exit"] => Ok(Command::Exit),
-            _ => Err(Error::CommandNotRecognized("Command not recognized")),
-        }
-    }
-}
-
 pub trait Node {
     fn open(&mut self, name: String) -> Result<&Folder>;
 
     fn move_to(&self, path: String) -> Result<()>;
 
-    fn remove(&self, name: String) -> Result<()>;
+    fn remove(&self, name: String, arguments: Vec<Argument>) -> Result<()>;
 }
