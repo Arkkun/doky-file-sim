@@ -1,4 +1,4 @@
-use std::cell::{Ref, RefCell};
+use std::cell::RefCell;
 use std::rc::{Rc, Weak};
 
 use crate::Node;
@@ -10,8 +10,6 @@ pub struct Folder {
     root: Rc<RefCell<FolderCursor>>,
     item: Rc<RefCell<FolderCursor>>,
 }
-
-impl Folder {}
 
 #[derive(Debug)]
 struct FolderCursor {
@@ -101,8 +99,13 @@ impl FolderCursor {
     ) -> Result<()> {
         let mut folder = current.borrow_mut();
         if let Some(index) = folder.childs.iter().position(|f| f.borrow().name == name) {
-            if !folder.childs[index].borrow().childs.is_empty() {
-                let message = format!("Folder {} is not empty", name);
+            if !folder.childs[index].borrow().childs.is_empty()
+                && !argments.contains(&Argument::Force)
+            {
+                let message = format!(
+                    "Folder {} is not empty, you can force the remove by adding argument --force",
+                    name
+                );
                 return Err(Error::FolderNotEmpty(message));
             }
             folder.childs.remove(index);
@@ -169,10 +172,6 @@ fn is_valid_name(name: &str) -> bool {
 
 #[cfg(test)]
 mod tests {
-    use std::result;
-
-    use crate::folder;
-
     use super::*;
 
     fn setup() -> Folder {
@@ -314,13 +313,25 @@ mod tests {
     }
 
     #[test]
-    fn remove_folder_not_empty() {
+    fn remove_folder_not_empty_return_error() {
         let folder = setup();
         let result = folder.remove("first".to_string(), Vec::new());
         assert!(result.is_err());
         assert_eq!(
-            Error::FolderNotEmpty("Folder first is not empty".to_string()),
+            Error::FolderNotEmpty(
+                "Folder first is not empty, you can force the remove by adding argument --force"
+                    .to_string()
+            ),
             result.unwrap_err()
         );
+    }
+
+    #[test]
+    fn remove_folder_force_success() {
+        let mut folder = setup();
+        let result = folder.remove("first".to_string(), vec![Argument::Force]);
+        assert!(result.is_ok());
+        let result = folder.open("first".to_string());
+        assert!(result.is_err());
     }
 }

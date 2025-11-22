@@ -90,6 +90,30 @@ mod tests {
     }
 
     #[test]
+    fn command_display() {
+        let res = Command::from_str("ls");
+        assert!(res.is_ok());
+        assert_eq!(res.unwrap(), Command::Display);
+    }
+
+    #[test]
+    fn command_make() {
+        let res = Command::from_str("mk new_folder");
+        assert!(res.is_ok());
+        assert_eq!(res.unwrap(), Command::Make("new_folder".to_string()));
+    }
+
+    #[test]
+    fn command_open() {
+        let res = Command::from_str("cd first/first_folder");
+        assert!(res.is_ok());
+        assert_eq!(
+            res.unwrap(),
+            Command::Open("first/first_folder".to_string())
+        );
+    }
+
+    #[test]
     fn command_exit() {
         let res = Command::from_str("exit");
         assert!(res.is_ok());

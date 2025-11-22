@@ -1,4 +1,3 @@
-use std::env::Args;
 use std::io::stdin;
 use std::str::FromStr;
 
@@ -36,7 +35,9 @@ fn main() {
                         }
                     }
                     Command::Remove(name, arguments) => {
-                        &folder.remove(name, arguments);
+                        if let Err(e) = folder.remove(name, arguments) {
+                            println!("Error during remove: {:?}", e);
+                        }
                     }
                     Command::Help => {
                         println!("Command's list:");
